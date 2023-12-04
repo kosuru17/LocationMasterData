@@ -38,5 +38,5 @@ jobs:
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
     - run: |
-        docker build . -t ${{ secrets.ACR_ENDPOINT }}/locationConsumerQuery:${{ github.sha }}
-        docker push ${{ secrets.ACR_ENDPOINT }}/locationConsumerQuery:${{ github.sha }}
+        docker build . -t ${{ secrets.ACR_ENDPOINT }}/locationconsumerquery:${{ github.sha }}
+        docker push ${{ secrets.ACR_ENDPOINT }}/locationconsumerquery:${{ github.sha }}
