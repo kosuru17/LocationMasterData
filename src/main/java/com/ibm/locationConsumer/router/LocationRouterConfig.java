@@ -23,7 +23,7 @@ public class LocationRouterConfig {
                                         .GET("/name/{locName}",handler::getLocByName)
                                         .GET("/locationType/{locType}",handler::getLocByType)
                                         .GET("/locCode/{locCode}",handler::getLocByCode)
-                                        .GET("/locCodeType{locCodeType}",handler::getLocByCodeType))
+                                        .GET("/locCodeType/{locCodeType}",handler::getLocByCodeType))
                 .build();
     }
 }

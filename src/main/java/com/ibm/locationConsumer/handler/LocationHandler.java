@@ -30,7 +30,7 @@ public class LocationHandler {
     @Autowired
     private LocationRepo locationRepo;
 
-    private ObjectMapper objectMapper;
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     public Mono<ServerResponse> getDemo(ServerRequest request) {
      return ServerResponse.ok().body(Mono.just(1).log(),Integer.class);
@@ -40,46 +40,41 @@ public class LocationHandler {
         String id = request.pathVariable("id");
         Mono<LocationEntity> locationEntityMono = locationRepo.findById(Integer.parseInt(id))
                 .switchIfEmpty(Mono.error(new RuntimeException("Location not found with the id : "+ id)));
-        return ok().body(locationEntityMono, LocationEntity.class);
+        Mono<Location> location = getLocationMono(locationEntityMono);
+        return ok().body(location, Location.class);
     }
 
     public Mono<ServerResponse> getLocByName(ServerRequest request){
         String locName = request.pathVariable("locName");
        // Optional<String> locName = request.queryParam("locName").map(value -> value + "%");
         Mono<LocationEntity> locationEntity = locationRepo.findByLocName(locName).switchIfEmpty(Mono.error(new RuntimeException("Location with the given name is not found.")));
-
-
-        Mono<Location> location = locationEntity.flatMap(data -> {
-            try {
-                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                return Mono.just(objectMapper.readValue(data.getLocation(), Location.class));
-            } catch (JsonProcessingException e) {
-                return Mono.error(new RuntimeException("Error while deserializing to Location object."));
-            }
-        });
+        Mono<Location> location = getLocationMono(locationEntity);
         return ok().body(location, Location.class);
     }
 
     public Mono<ServerResponse> getLocByType(ServerRequest request){
         String locType = request.pathVariable("locType");
         Flux<LocationEntity> locEntity = locationRepo.findByLocType(locType).switchIfEmpty(Mono.error(new RuntimeException("Location with the given type is not found.")));
-        Flux<Location> locations = locEntity.map(data-> {
-            // Deserialize the JSON string to a Location object
-            try {
-                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-                return objectMapper.readValue(data.getLocation(), Location.class);
-            } catch (JsonProcessingException e) {
-                throw new RuntimeException("Error while deserializing to Location object.");
-            }
-
-        });
+        Flux<Location> locations = getLocations(locEntity);
         return ok().body(locations, Location.class);
     }
 
     public Mono<ServerResponse> getLocByCode(ServerRequest request){
         String locCode = request.pathVariable("locCode");
-        Mono<LocationEntity> locationEntity = locationRepo.findByLocCode(locCode).switchIfEmpty(Mono.error(new RuntimeException("Location with the given location code is not found.")));;
-        Mono<Location> locations = locationEntity.flatMap(data-> {
+        Mono<LocationEntity> locationEntity = locationRepo.findByLocCode(locCode).switchIfEmpty(Mono.error(new RuntimeException("Location with the given location code is not found.")));
+        Mono<Location> location = getLocationMono(locationEntity);
+        return ok().body(location, Location.class);
+    }
+
+    public Mono<ServerResponse> getLocByCodeType(ServerRequest request){
+        String locCodeType = request.pathVariable("locCodeType");
+        Flux<LocationEntity> locationEntityFlux = locationRepo.findByLocCodeType(locCodeType).switchIfEmpty(Mono.error(new RuntimeException("Location with the given code type is not found.")));
+        Flux<Location> locations = getLocations(locationEntityFlux);
+        return ok().body(locations, Location.class);
+    }
+
+    private Mono<Location> getLocationMono(Mono<LocationEntity> locationEntity){
+        return locationEntity.flatMap(data-> {
             // Deserialize the JSON string to a Location object
             try {
                 objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -88,13 +83,10 @@ public class LocationHandler {
                 return Mono.error(new RuntimeException("Error while deserializing to Location object."));
             }
         });
-        return ok().body(locations, Location.class);
     }
 
-    public Mono<ServerResponse> getLocByCodeType(ServerRequest request){
-        String locCodeType = request.pathVariable("locCodeType");
-        Flux<LocationEntity> locationEntityFlux = locationRepo.findByLocCodeType(locCodeType).switchIfEmpty(Mono.error(new RuntimeException("Location with the given code type is not found.")));;
-        Flux<Location> locations = locationEntityFlux.map(data-> {
+    private Flux<Location> getLocations(Flux<LocationEntity> locationEntityFlux){
+        return locationEntityFlux.map(data-> {
             // Deserialize the JSON string to a Location object
             try {
                 objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -103,7 +95,6 @@ public class LocationHandler {
                 throw new RuntimeException("Error while deserializing to Location object.");
             }
         });
-        return ok().body(locations, Location.class);
     }
 
 }
