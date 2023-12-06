@@ -25,7 +25,8 @@ public class KafkaConsumerService {
     private  Boolean validJson;
 
 
-@KafkaListener(topics = "${spring.kafka.topic}", groupId = "${spring.kafka.groupId}" ,properties = {"spring.json.value.default.type=com.ibm.locationConsumer.dto.Location"})
+//@KafkaListener(topics = "${spring.kafka.topic}", groupId = "${spring.kafka.groupId}" ,properties = {"spring.json.value.default.type=com.ibm.locationConsumer.dto.Location"})
+@KafkaListener(topics = "kosuru.locationref.topic.internal.any.v1", groupId = "ConsumerGroup1" ,properties = {"spring.json.value.default.type=com.ibm.locationConsumer.dto.Location"})
     public void consume(String message, ConsumerRecord<String,String> record ) throws JsonProcessingException {
         System.out.println(message);
         //String payLoad = message.replaceAll("^\"|\"$","").trim();
