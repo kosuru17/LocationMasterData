@@ -11,20 +11,27 @@ import reactor.core.publisher.Mono;
 public class TestUtility {
 
     public Mono<LocationEntity> getLocEntity(int id) throws JsonProcessingException {
-        String locationString = "{\"bdas\":null,\"name\":\"amniso1\",\"locationId\":\"I9XVMBBKTMMHL\",\"status\":\"InActive\",\"bdaType\":null,\"country\":null,\"geoType\":\"Continent\",\"parents\":null,\"validTo\":\"2022-07-17\",\"huluName\":null,\"latitude\":null,\"portFlag\":false,\"timeZone\":null,\"longitude\":null,\"validFrom\":\"2022-07-17\",\"restricted\":null,\"description\":null,\"dialingCode\":null,\"bdaLocations\":null,\"isDuskCity\":false,\"olsonTimezone\":null,\"alternateCodes\":[{\"code\":\"I9XVMBBKTMMHL\",\"codeType\":\"locationId\"}],\"alternateNames\":[{\"name\":\"amnira\",\"status\":\"InActive\",\"description\":null},{\"name\":\"sjsksklk12344\",\"status\":\"Active\",\"description\":\"sjsksklk\"}],\"subCityParents\":null,\"utcOffsetMinutes\":null,\"workaroundReason\":null,\"daylightSavingEnd\":null,\"daylightSavingTime\":null,\"daylightSavingStart\":null,\"postalCodeMandatory\":null,\"dialingCodeDescription\":null,\"stateProvinceMandatory\":null,\"daylightSavingShiftMinutes\":null}";
-        String jsonData = locationString.replaceAll("^\"|\"$|\\\\", "").trim();
+        Mono<String> locationString = Mono.just("{\"bdas\":null,\"name\":\"amniso\",\"locationId\":\"I9XVMBBKTMMHL\",\"status\":\"InActive\",\"bdaType\":null,\"country\":null,\"geoType\":\"Continent\",\"parents\":null,\"validTo\":\"2022-07-17\",\"huluName\":null,\"latitude\":null,\"portFlag\":false,\"timeZone\":null,\"longitude\":null,\"validFrom\":\"2022-07-17\",\"restricted\":null,\"description\":null,\"dialingCode\":null,\"bdaLocations\":null,\"isDuskCity\":false,\"olsonTimezone\":null,\"alternateCodes\":[{\"code\":\"I9XVMBBKTMMHL\",\"codeType\":\"locationId\"}],\"alternateNames\":[{\"name\":\"amnira\",\"status\":\"InActive\",\"description\":null},{\"name\":\"sjsksklk12344\",\"status\":\"Active\",\"description\":\"sjsksklk\"}],\"subCityParents\":null,\"utcOffsetMinutes\":null,\"workaroundReason\":null,\"daylightSavingEnd\":null,\"daylightSavingTime\":null,\"daylightSavingStart\":null,\"postalCodeMandatory\":null,\"dialingCodeDescription\":null,\"stateProvinceMandatory\":null,\"daylightSavingShiftMinutes\":null}");
+        Mono<String> jsonData = locationString.map(data -> data.replaceAll("^\"|\"$|\\\\", "").trim());
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        Location location = objectMapper.readValue(jsonData, Location.class);
         LocationEntity locationEntity = new LocationEntity();
-        locationEntity.setId(id);
-        locationEntity.setLocationName(location.getName());
-        locationEntity.setLocationType(location.getGeoType());
-        locationEntity.setLocationCode(location.getAlternateCodes().get(0).getCode());
-        locationEntity.setLocationCodeType(location.getAlternateCodes().get(0).getCodeType());
-        locationEntity.setLocation(locationString);
-        Mono<LocationEntity> locationEntityMono = Mono.just(locationEntity);
-        return locationEntityMono;
+        Mono<LocationEntity> monoLocation = jsonData.map(data -> {
+            try {
+                Location location = objectMapper.readValue(data, Location.class);
+                locationEntity.setId(id);
+                locationEntity.setLocationName(location.getName());
+                locationEntity.setLocationType(location.getGeoType());
+                locationEntity.setLocationCode(location.getAlternateCodes().get(0).getCode());
+                locationEntity.setLocationCodeType(location.getAlternateCodes().get(0).getCodeType());
+                locationEntity.setLocation(data);
+                return locationEntity;
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        monoLocation.subscribe();
+        return monoLocation;
     }
 
     public static Mono<LocationEntity> getLocEntity() throws JsonProcessingException {

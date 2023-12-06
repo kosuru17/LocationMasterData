@@ -63,7 +63,8 @@ class LocationApiTest {
 
     @Test
     void getLocById() throws JsonProcessingException {
-        int id = 121;
+        int id = 56;
+        String name = "amniso";
         Mono<LocationEntity> entityMono = testUtility.getLocEntity(id);
         Mockito.when(locationRepo.findById(id)).thenReturn(entityMono);
 
@@ -73,7 +74,7 @@ class LocationApiTest {
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
                 .expectBody()
-                .jsonPath("$.id").isEqualTo(id);
+                .jsonPath("$.name").isEqualTo(name);
     }
 
     @Test
@@ -125,7 +126,7 @@ class LocationApiTest {
         Flux<LocationEntity> entityFlux = testUtility.getLocEntities();
         Mockito.when(locationRepo.findByLocCodeType(locCodeType)).thenReturn(entityFlux);
         webTestClient.get()
-                .uri("http://localhost:8085/router/locCodeType{locCodeType}", locCodeType)
+                .uri("http://localhost:8085/router/locCodeType/{locCodeType}", locCodeType)
                 .exchange()
                 .expectStatus().isOk()
                 .expectHeader().contentType(MediaType.APPLICATION_JSON)
